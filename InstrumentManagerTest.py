@@ -16,17 +16,13 @@ class InstrumentationManager(object):
     
     def __init__(self):
 
-        self.connectedinstrument = False
         self.patient = ["name", "age", "height", "weight"]
-        self.g_code_setup = "G90 G21 G17"
         self.port_read = ""
         self.port_control = ""
         self.monitor_port = ""
-        self.setup = False
-        self.Probe_grip = False
-        self.probe_in_place = True
+        self.monitor = True
+        self.results= []
         
-                
         
     def set_ODM_port_number(self, monitor_com):
         monitor_port = monitor_com
@@ -46,7 +42,7 @@ class InstrumentationManager(object):
         
         return serial_port_read
     
-    def AccessPortControl(self, port_number):
+    def AccessSerialControl(self, port_number):
         port_number = port_number
         
         serial_port_control = serial.Serial(port = port_number,
@@ -59,7 +55,7 @@ class InstrumentationManager(object):
         return serial_port_control
       
         
-    def ReadPortODM(self):
+    def ReadSerialODM(self):
         
         # initalise parameters
         found_item = "A"
@@ -72,7 +68,8 @@ class InstrumentationManager(object):
         # ======================
         # Set up port connection
         #=======================
-        serial_port = self.AccessPortRead(port)
+        
+        serial_port = self.AccessSerialControl(port)
         
         # ===========================
         # Access the ODM via the port
@@ -94,72 +91,8 @@ class InstrumentationManager(object):
         serial_port.close()                                # Close serial port
       
         return serial_result                               # return all paramters
-    
-    
-    def CheckProbeInPlace(self):
-        
-        # Detect port and connect
-        probe_in_place = False
-        port_command = "M10"
-        port_control = "COM4"
-        found_item = ""
-        serial_port_control = self.AccessPortControl(port_control)
-        serial_port_control.write(port_command)
-        parameter = serial_port_control.read().decode('Ascii')
-        while parameter != found_item:                     # Test for start of parameters
-            parameter = serial_port_control.read().decode('Ascii')
-            probe_in_place = True
-          
-            
-        return probe_in_place
-    
-    
-    def MoveProbeClockwise(self):
-        # Check port access in 10 degrees
-        step_acheved = False
-        g_code_setup = "G90 G21 G17"
-        g_code_move = "G68 X0 Y0 R5"
-        port_control = "COM4"
-        serial_port_control = self.AccessPortControl(port_control)
-        
-                
-        if self.setup == False:
-            serial_port_control.write(g_code_setup)
-            self.setup = True
-                
-        if self.setup == True and self.probe_grip == True:
-            serial_port_control.write(g_code_move)
-            step_acheved = True
-            
-            
-        # access serial port with own port number
-        # try / catch move motor 10 degrees
-        # step acheved as true
-        
-        return step_acheved
-    
-    
-    def MoveProbeAnticlockwise(self):
-        # Check port access in 10 degrees
-        step_acheved = False
-        g_code_move = "G68 X0 Y0 R-5"
-        port_control = "COM4"
-        serial_port_control = self.AccessPortControl(port_control)
-        
-                
-        if self.setup == False:
-            serial_port_control.write(g_code_setup)
-            self.setup = True
-                
-        if self.setup == True and self.probe_grip == True:
-            serial_port_control.write(g_code_move)
-            step_acheved = True
-        
-        # access serial port with own port number
-        # try / catch move motor 10 degrees
-        # step acheved as true
-        
-        return step_acheved
+
+     
     
     def TestPatientConfig(self):
         # Detect port and connect
@@ -171,33 +104,17 @@ class InstrumentationManager(object):
             return False
         
         
+
+ 
     
-    def ProbeGrip(self):
-        # check port access
-        port_command = "M10"
-        port_control = "COM4"
-        serial_port_control = self.AccessPortControl(port_control)
+    def read_monitor(self, monitor):
+        if monitor == True:
+            results = InstrumentationManager.ReadSerialODM()
         
-        if self.Probe_grip == False:
-            serial_port_control.write(port_command)
-            self.probe_in_place = True
+        if monitor == False:
+            results = InstrumentationManager.GetExtendedParamerts()
             
-        return probe_in_place
-       
-        
-        
-    def Release_tool(self):
-        # check port access
-        port_command = "M11"
-        port_control = "COM4"
-        serial_port_control = self.AccessPortControl(port_control)
-        
-        if self.Probe_grip == True:
-            serial_port_control.write(port_command)
-            self.probe_in_place = False
-            
-        return probe_in_place
-        
+        return results   
         
     
         
@@ -247,7 +164,7 @@ class InstrumentationManager(object):
         serialPort.close()
         print(serial_result)
         
-    def GetPatientParamerts(self):
+    def GetExtendedParamerts(self):
         packet_select = bytearray()
         packet_read = bytearray()
         
@@ -318,3 +235,107 @@ class InstrumentationManager(object):
         print(serial_result)
         
         return serial_result
+    
+class MoveProbe():
+    
+    def __init__(self):
+        self.step_acheived = False
+        self.g_code_setup = "G90 G21 G17"
+        self.setup = False
+        self.Probe_grip = False
+        self.probe_in_place = True
+        
+    def MoveProbeClockwise(self):
+        # Check port access in 10 degrees
+        step_acheved = False
+        g_code_setup = "G90 G21 G17"
+        g_code_move = "G68 X0 Y0 R5"
+        port_control = "COM4"
+        serial_port_control = self.AccessPortControl(port_control)
+        
+                
+        if self.setup == False:
+            serial_port_control.write(g_code_setup)
+            self.setup = True
+                
+        if self.setup == True and self.probe_grip == True:
+            serial_port_control.write(g_code_move)
+            step_acheved = True
+            
+            
+        # access serial port with own port number
+        # try / catch move motor 10 degrees
+        # step acheved as true
+        
+        return step_acheved
+    
+    
+    def MoveProbeAnticlockwise(self):
+        # Check port access in 10 degrees
+        step_acheved = False
+        g_code_move = "G68 X0 Y0 R-5"
+        port_control = "COM4"
+        serial_port_control = self.AccessPortControl(port_control)
+        
+                
+        if self.setup == False:
+            serial_port_control.write(g_code_setup)
+            self.setup = True
+                
+        if self.setup == True and self.probe_grip == True:
+            serial_port_control.write(g_code_move)
+            step_acheved = True
+        
+        # access serial port with own port number
+        # try / catch move motor 10 degrees
+        # step acheved as true
+        
+        return step_acheved
+    
+   
+        
+        
+    
+    def ProbeGrip(self):
+        # check port access
+        port_command = "M10"
+        port_control = "COM4"
+        serial_port_control = self.AccessPortControl(port_control)
+        
+        if self.Probe_grip == False:
+            serial_port_control.write(port_command)
+            self.probe_in_place = True
+            
+        return probe_in_place
+       
+        
+        
+    def Release_tool(self):
+        # check port access
+        port_command = "M11"
+        port_control = "COM4"
+        serial_port_control = self.AccessPortControl(port_control)
+        
+        if self.Probe_grip == True:
+            serial_port_control.write(port_command)
+            self.probe_in_place = False
+            
+        return probe_in_place
+
+
+class ChooseMonitor(object):
+    
+    def get_monitor_type(self):
+        return monitor
+    
+    def set_monitor_type(self, monitor):
+        self.monitor = monitor
+    
+    def read_monitor(self, monitor_type):
+        if monitor == True:
+            results = InstrumentationManager.ReadSerialODM()
+        
+        if monitor == False:
+            results = InstrumentationManager.GetExtendedParamerts()
+            
+        return results

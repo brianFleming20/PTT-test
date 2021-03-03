@@ -4,10 +4,10 @@ Created on 28 Apr 2017
 @author: jackw
 '''
 import PI
-import InstrumentManager as IM
-import BatchManager
+import InstrumentManagerTest as IM
+import BatchManagerTest
 
-BM = BatchManager.BatchManager()
+BM = BatchManagerTest.BatchManager()
 
 
 class ProbeManager(object):

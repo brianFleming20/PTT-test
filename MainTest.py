@@ -2,6 +2,7 @@
 Created on 3 May 2017
 
 @author: jackw
+Ammended by BrianF
 
 Naming convention
 - Variables = no spaces, capitals for every word except the first : thisIsAVariable
@@ -32,17 +33,17 @@ import pyvisa as visa
 import time
 
 
-import InstrumentManager
+import InstrumentManagerTest
 # from InstrumentManager import ZND
-import ProbeManager
-from ProbeManager import Probe
-from ProbeManager import ProbeManager
-import BatchManager
-from BatchManager import Batch
+import ProbeManagerTest
+from ProbeManagerTest import Probe
+from ProbeManagerTest import ProbeManager
+import BatchManagerTest
+from BatchManagerTest import Batch
 
 PM = ProbeManager()
-IM = InstrumentManager.InstrumentationManager()
-BM = BatchManager.BatchManager()
+IM = InstrumentManagerTest.InstrumentationManager()
+BM = BatchManagerTest.BatchManager()
 
 # define global variables
 PTT_Version = 'Deltex Medical : XXXX-XXXX Probe Test Tool V0.1'
