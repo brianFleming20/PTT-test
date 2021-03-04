@@ -20,8 +20,12 @@ class InstrumentationManager(object):
         self.port_read = ""
         self.port_control = ""
         self.monitor_port = ""
-        self.monitor = True
         self.results= []
+    
+    def GetMonitorReadings(self):
+        my_monitor = ChooseMonitor()
+        monitor = my_monitor.get_monitor_type()
+        print("Getting is {}".format(monitor))
         
         
     def set_ODM_port_number(self, monitor_com):
@@ -103,21 +107,7 @@ class InstrumentationManager(object):
         else:
             return False
         
-        
-
- 
-    
-    def read_monitor(self, monitor):
-        if monitor == True:
-            results = InstrumentationManager.ReadSerialODM()
-        
-        if monitor == False:
-            results = InstrumentationManager.GetExtendedParamerts()
-            
-        return results   
-        
-    
-        
+     
     # def ContinuePatient(self):
     #     # return current patient
         
@@ -324,18 +314,21 @@ class MoveProbe():
 
 
 class ChooseMonitor(object):
+    monitor_type = ""
+    def __init__(self):
+        self.monitor = ""
+        
     
     def get_monitor_type(self):
-        return monitor
-    
+        print(monitor_type)
+        return monitor_type
+   
+   
     def set_monitor_type(self, monitor):
-        self.monitor = monitor
-    
-    def read_monitor(self, monitor_type):
-        if monitor == True:
-            results = InstrumentationManager.ReadSerialODM()
         
-        if monitor == False:
-            results = InstrumentationManager.GetExtendedParamerts()
+        if monitor == "true":
+            monitor_type = "serial"
+        else:
+            monitor_type = "extended"
             
-        return results
+        return monitor_type

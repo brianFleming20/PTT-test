@@ -40,10 +40,12 @@ from ProbeManagerTest import Probe
 from ProbeManagerTest import ProbeManager
 import BatchManagerTest
 from BatchManagerTest import Batch
+from InstrumentManagerTest import ChooseMonitor
 
 PM = ProbeManager()
 IM = InstrumentManagerTest.InstrumentationManager()
 BM = BatchManagerTest.BatchManager()
+CM = ChooseMonitor
 
 # define global variables
 PTT_Version = 'Deltex Medical : XXXX-XXXX Probe Test Tool V0.1'
@@ -284,6 +286,7 @@ class ConnectionWindow(tk.Frame):
         # define variables
         self.Monitor = StringVar()
         self.comPort = StringVar()
+        self.isSerial = StringVar()
         self.connectedToCom = False
         self.connectedToAnalyser = False
 
@@ -299,10 +302,16 @@ class ConnectionWindow(tk.Frame):
         self.entry_1.insert(END, 'COM5')
         self.entry_2.insert(END, 'COM3')
 
-        self.label_1.place(relx=0.4, rely=0.2, anchor=CENTER)
-        self.label_2.place(relx=0.375, rely=0.4, anchor=CENTER)
-        self.entry_1.place(relx=0.6, rely=0.2, anchor=CENTER)
-        self.entry_2.place(relx=0.6, rely=0.4, anchor=CENTER)
+        self.label_1.place(relx=0.3, rely=0.2, anchor=CENTER)
+        self.label_2.place(relx=0.275, rely=0.4, anchor=CENTER)
+        self.entry_1.place(relx=0.5, rely=0.2, anchor=CENTER)
+        self.entry_2.place(relx=0.5, rely=0.4, anchor=CENTER)
+        self.rb1 = ttk.Radiobutton(
+            self, text='Serial', variable=self.isSerial, value='true')
+        self.rb1.place(relx=0.45, rely=0.5, anchor=CENTER)
+        self.rb2 = ttk.Radiobutton(
+            self, text='Extended', variable=self.isSerial, value='false')
+        self.rb2.place(relx=0.46, rely=0.55, anchor=CENTER)
 
         self.connectBtn = ttk.Button(
             self, text="Connect", command=lambda: self._connect_btn_clicked(controller))
@@ -324,6 +333,13 @@ class ConnectionWindow(tk.Frame):
             tm.showerror(
                 'Connection Error', 'Unable to connect to Probe Interface\nPlease check the COM Port is correct.')
 
+        
+             
+        my_monitor = CM()
+        monitor = my_monitor.set_monitor_type(self.isSerial.get())
+        
+        
+        IM.GetMonitorReadings()
         # try:
         #     IM.set_ODM_port_number(odm)
             
