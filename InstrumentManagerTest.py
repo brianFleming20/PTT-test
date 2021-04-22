@@ -21,11 +21,11 @@ class InstrumentationManager(object):
         self.port_control = ""
         self.monitor_port = ""
         self.results= []
+        self.monitor =""
     
     def GetMonitorReadings(self):
-        my_monitor = ChooseMonitor()
-        monitor = my_monitor.get_monitor_type()
-        print("Getting is {}".format(monitor))
+        self.monitor = ChooseMonitor.get_monitor_type(self)
+        print("Getting is {}".format(self.monitor))
         
         
     def set_ODM_port_number(self, monitor_com):
@@ -36,15 +36,21 @@ class InstrumentationManager(object):
     
     def AccessPortRead(self, port_number):
         port_number = port_number
+        print(port_number)
         
         serial_port_read = serial.Serial(port = port_number, 
-                                   baudrate=9600,
+                                   baudrate=1152000,
                                    bytesize=8,
-                                   timeout=4,
+                                   timeout=0.05,
                                    parity = serial.PARITY_NONE,
                                    stopbits=serial.STOPBITS_ONE)
+
+        print("{}".format(serial_port_read.write("frequencies\r".encode('ascii'))))
         
+        serial_port_read.close()
         return serial_port_read
+    
+    
     
     def AccessSerialControl(self, port_number):
         port_number = port_number
@@ -117,6 +123,8 @@ class InstrumentationManager(object):
     #======================================================
     
     # Detecting patient parameters from ODM extended
+        
+        
     
         
     def GetODMParameters(self):
@@ -314,14 +322,14 @@ class MoveProbe():
 
 
 class ChooseMonitor(object):
-    monitor_type = ""
+   
     def __init__(self):
-        self.monitor = ""
+        self.monitor = "Serial"
         
     
     def get_monitor_type(self):
-        print(monitor_type)
-        return monitor_type
+        print(self.monitor)
+        return self.monitor
    
    
     def set_monitor_type(self, monitor):
@@ -332,3 +340,38 @@ class ChooseMonitor(object):
             monitor_type = "extended"
             
         return monitor_type
+    
+class ZND(object):
+    '''
+    Handles VNA operations. Primarily: configuring, refreshing traces and retrieving trace values
+    '''
+    
+    def __init__(self):
+        self.deviceDetails = ''
+        self.rm = visa.ResourceManager('@py')
+        # self.HISLIPAddress = ''
+        self.znd = False
+        self.RxRL = None
+        self.TxRL = None
+        self.RxMinFreq = None
+        self.RxMinMag = None
+        self.TxMinFreq = None
+        self.TxMinMag = None
+        
+        
+   
+      
+        
+        
+        
+        
+        
+           
+    def SetAddress(self, USBAddress):
+        '''
+        Pass in the IP address of the VNA, Sets the HISLIP address
+        '''
+        print("inside set address" + USBAddress)
+        # dev = usb.core.find(idVendor=0xfffe, idProduct=0x0001)
+        #self.HISLIPAddress = 'TCPIP::' + IPAddress + '::HISLIP0'
+        self.HISLIPAddress = 'USB::' + USBAddress + '::INSTR'

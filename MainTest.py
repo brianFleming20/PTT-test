@@ -41,6 +41,7 @@ from ProbeManagerTest import ProbeManager
 import BatchManagerTest
 from BatchManagerTest import Batch
 from InstrumentManagerTest import ChooseMonitor
+# import VNA_Test as VNA
 
 PM = ProbeManager()
 IM = InstrumentManagerTest.InstrumentationManager()
@@ -115,7 +116,7 @@ class TestProgramWindow(tk.Frame):
         self.currentBatch = StringVar()
         self.currentUser = StringVar()
         self.probesPassed = IntVar()
-        self.deviceDetails = "Not connected to analyser"
+        self.deviceDetails = "COM4"
         self.probeType = StringVar()
         self.SD_data = IntVar()
         self.FTc_data = IntVar()
@@ -197,16 +198,16 @@ class TestProgramWindow(tk.Frame):
         serial_results = []
 
         # self.root.deiconify()
-        self.probeType.set(BM.currentBatch.probeType)
-        self.currentBatch.set(BM.currentBatch.batchNumber)
+        # self.probeType.set(BM.currentBatch.probeType)
+        # self.currentBatch.set(BM.currentBatch.batchNumber)
         self.probesPassed.set(0)
         self.currentUser = "Tester"
         # self.deviceDetails.set(PM.ZND.deviceDetails)
         self.RLLimit = -1  # pass criteria for return loss measurement
 
         # Collect serial data
-    # def read_serial_data(self):
-        serial_results = IM.ReadPortODM()
+   
+        serial_results = IM.ReadSerialODM()
         # serial_results = IM.GetPatientParamerts()
         # self.SD_data.set(serial_results[0])
         # self.FTc_data.set(serial_results[1])
@@ -227,7 +228,8 @@ class TestProgramWindow(tk.Frame):
 
                 if ProbeIsProgrammed == False or tm.askyesno('Programmed Probe Detected', 'This probe is already programmed.\nDo you wish to re-program and test?'):
                     self.action.set('Programming probe')
-                    serialNumber = PM.ProgramProbe(BM.currentBatch.probeType)
+                    # serialNumber = PM.ProgramProbe(BM.currentBatch.probeType)
+                    serialNumber = "12345"
                     if serialNumber == False:
                         tm.showerror('Programming Error',
                                      'Unable to program\nPlease check U1')
@@ -286,32 +288,41 @@ class ConnectionWindow(tk.Frame):
         # define variables
         self.Monitor = StringVar()
         self.comPort = StringVar()
-        self.isSerial = StringVar()
+        self.AnalyserUSB = StringVar()
         self.connectedToCom = False
         self.connectedToAnalyser = False
+        AnalyserUSB = 'COM4'
+        comPort = 'COM3'
+        Monitor = 'COM5'
 
         # create the window and frame
         tk.Frame.__init__(self, parent)
 
         # create the widgets
-        self.label_1 = ttk.Label(self, text="ODM monitor COM port")
-        self.label_2 = ttk.Label(self, text="Probe Interface COM Port")
+        self.label_1 = ttk.Label(self, text="ODM monitor port")
+        self.label_2 = ttk.Label(self, text="Probe Interface Port")
+        self.label_3 = ttk.Label(self, text="Analyser name")
 
         self.entry_1 = ttk.Entry(self, textvariable=self.Monitor,)
         self.entry_2 = ttk.Entry(self, textvariable=self.comPort, )
-        self.entry_1.insert(END, 'COM5')
-        self.entry_2.insert(END, 'COM3')
+        self.entry_3 = ttk.Entry(self, textvariable=self.AnalyserUSB, )
+        
+        self.entry_1.insert(END, Monitor)
+        self.entry_2.insert(END, comPort)
+        self.entry_3.insert(END, AnalyserUSB)
 
-        self.label_1.place(relx=0.3, rely=0.2, anchor=CENTER)
+        self.label_1.place(relx=0.275, rely=0.2, anchor=CENTER)
         self.label_2.place(relx=0.275, rely=0.4, anchor=CENTER)
+        self.label_3.place(relx=0.31, rely=0.3,anchor=CENTER)
         self.entry_1.place(relx=0.5, rely=0.2, anchor=CENTER)
         self.entry_2.place(relx=0.5, rely=0.4, anchor=CENTER)
-        self.rb1 = ttk.Radiobutton(
-            self, text='Serial', variable=self.isSerial, value='true')
-        self.rb1.place(relx=0.45, rely=0.5, anchor=CENTER)
-        self.rb2 = ttk.Radiobutton(
-            self, text='Extended', variable=self.isSerial, value='false')
-        self.rb2.place(relx=0.46, rely=0.55, anchor=CENTER)
+        self.entry_3.place(relx=0.5, rely=0.3, anchor=CENTER)
+        # self.rb1 = ttk.Radiobutton(
+        #     self, text='Serial', variable=self.isSerial, value='true')
+        # self.rb1.place(relx=0.45, rely=0.5, anchor=CENTER)
+        # self.rb2 = ttk.Radiobutton(
+        #     self, text='Extended', variable=self.isSerial, value='false')
+        # self.rb2.place(relx=0.46, rely=0.55, anchor=CENTER)
 
         self.connectBtn = ttk.Button(
             self, text="Connect", command=lambda: self._connect_btn_clicked(controller))
@@ -319,36 +330,41 @@ class ConnectionWindow(tk.Frame):
         self.connectBtn.place(relx=0.4, rely=0.8, anchor=CENTER)
         self.bind('<Return>', self._connect_btn_clicked)
 
-       
+        self.cancelBtn = ttk.Button(
+            self, text="Cancel",  command=lambda: controller.show_frame(SessionSelectWindow))
+        self.cancelBtn.place(relx=0.6, rely=0.8, anchor=CENTER)
+
+        self.entry_1.focus_set()
+        
+      
+        
+            
 
     def _connect_btn_clicked(self, controller):
         cp = self.comPort.get()
         odm = self.Monitor.get()
+        usb = self.AnalyserUSB.get()
+        port_info = IM.AccessPortRead(usb)
+        
+        print("Analyser port {}".format(port_info.port))
+        print("Analyser rate {}".format(port_info.baudrate))
+        
+        try:
+            PM.SetVNAAddress(usb)
+            # PM.ZND.TestConnection()
+        except:
+            print('Connection Error')
        
         try:
             PM.ConnectToProbeInterface(cp)
+            IM.set_ODM_port_number(odm)        
             self.connectedToCom = True
         except:
             self.connectedToCom = False
             tm.showerror(
                 'Connection Error', 'Unable to connect to Probe Interface\nPlease check the COM Port is correct.')
 
-        
-             
-        my_monitor = CM()
-        monitor = my_monitor.set_monitor_type(self.isSerial.get())
-        
-        
-        IM.GetMonitorReadings()
-        # try:
-        #     IM.set_ODM_port_number(odm)
-            
-            
-            
-        # except:
-            
-            # tm.showerror(
-            #     'Connection Error', 'Unable to connect to Analyser\nPlease check the IP address is correct.')
+      
 
         if self.connectedToCom == True:
             controller.show_frame(TestProgramWindow)

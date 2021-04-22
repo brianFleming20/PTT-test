@@ -243,5 +243,5 @@ class Batch(object):
     def __init__(self, batchNumber):
         self.batchNumber = batchNumber
         self.probesProgrammed = 0
-        self.probeType = ''
+        self.probeType = 'On Test type'
         
