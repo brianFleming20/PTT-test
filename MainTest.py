@@ -40,13 +40,11 @@ from ProbeManagerTest import Probe
 from ProbeManagerTest import ProbeManager
 import BatchManagerTest
 from BatchManagerTest import Batch
-from InstrumentManagerTest import ChooseMonitor
-# import VNA_Test as VNA
 
 PM = ProbeManager()
 IM = InstrumentManagerTest.InstrumentationManager()
 BM = BatchManagerTest.BatchManager()
-CM = ChooseMonitor
+
 
 # define global variables
 PTT_Version = 'Deltex Medical : XXXX-XXXX Probe Test Tool V0.1'
@@ -116,7 +114,7 @@ class TestProgramWindow(tk.Frame):
         self.currentBatch = StringVar()
         self.currentUser = StringVar()
         self.probesPassed = IntVar()
-        self.deviceDetails = "COM4"
+        self.deviceDetails = ""
         self.probeType = StringVar()
         self.SD_data = IntVar()
         self.FTc_data = IntVar()
@@ -129,7 +127,6 @@ class TestProgramWindow(tk.Frame):
         self.redlight = (PhotoImage(file="red128.gif"))
         self.greylight = (PhotoImage(file="grey128.gif"))
         
-
         ttk.Label(self, text='Batch number: ').place(
             relx=0.1, rely=0.05, anchor='w')
         ttk.Label(self, textvariable=self.currentBatch, relief=SUNKEN, font="bold",
@@ -143,7 +140,7 @@ class TestProgramWindow(tk.Frame):
         # ttk.Label(self, text='User: ').place(relx=0.1, rely=0.15, anchor='w')
         # ttk.Label(self, textvariable=self.currentUser, relief=SUNKEN, font="bold",
         #           width=20).place(relx=0.3, rely=0.15, anchor='w')
-
+        
         ttk.Label(self, text='Connected to: ').place(
             relx=0.1, rely=0.25, anchor='w')
         ttk.Label(self, textvariable=self.deviceDetails, relief=SUNKEN,
@@ -196,7 +193,7 @@ class TestProgramWindow(tk.Frame):
     def refresh_window(self):
         self.sessionOnGoing = True
         serial_results = []
-
+        self.deviceDetails = IM.GetAnalyserPortNumber()
         # self.root.deiconify()
         # self.probeType.set(BM.currentBatch.probeType)
         # self.currentBatch.set(BM.currentBatch.batchNumber)
@@ -206,16 +203,23 @@ class TestProgramWindow(tk.Frame):
         self.RLLimit = -1  # pass criteria for return loss measurement
 
         # Collect serial data
-   
-        serial_results = IM.ReadSerialODM()
-        # serial_results = IM.GetPatientParamerts()
-        # self.SD_data.set(serial_results[0])
-        # self.FTc_data.set(serial_results[1])
-        # self.PV_data.set(serial_results[2])
-        
-        self.SD_data.set(serial_results[0][5])
-        self.FTc_data.set(serial_results[0][6])
-        self.PV_data.set(serial_results[0][9])
+        try:
+            
+            serial_results = IM.ReadSerialODM()
+            # serial_results = IM.GetPatientParamerts()
+            # self.SD_data.set(serial_results[0])
+            # self.FTc_data.set(serial_results[1])
+            # self.PV_data.set(serial_results[2])
+           
+            self.SD_data.set(serial_results[0][5])
+            self.FTc_data.set(serial_results[0][6])
+            self.PV_data.set(serial_results[0][9])
+            Tk.update(self)
+        except:
+            tm.showerror(
+                'Connection Error', 'Unable to connect to Monitor Interface\nPlease check the ODM Port is turned on.')
+                # controller.show_frame(ConnectionWindow)
+
         
         
         
@@ -258,17 +262,23 @@ class TestProgramWindow(tk.Frame):
                          # Collect serial data
                         while PM.ProbePresent() == True:
                             # serial_results = IM.GetPatientParamerts()
-                            serial_results = IM.ReadPortODM()
-                            print(serial_results)
+                            try:
+                                
+                                serial_results = IM.ReadPortODM()
+                            # print(serial_results)
                             # self.SD_data.set(serial_results[0])
                             # self.FTc_data.set(serial_results[1])
                             # self.PV_data.set(serial_results[2])
                             # Tk.update(self)
                             
-                            self.SD_data.set(serial_results[0][5])
-                            self.FTc_data.set(serial_results[0][6])
-                            self.PV_data.set(serial_results[0][9])
-                            Tk.update(self)
+                                self.SD_data.set(serial_results[0][5])
+                                self.FTc_data.set(serial_results[0][6])
+                                self.PV_data.set(serial_results[0][9])
+                                Tk.update(self)
+                            except:
+                                tm.showerror(
+                                    'Connection Error', 'Unable to connect to Monitor Interface\nPlease check the ODM Port is turned on.')
+                                
                         
                 while 1:
                     if PM.ProbePresent() == False:
@@ -344,16 +354,15 @@ class ConnectionWindow(tk.Frame):
         cp = self.comPort.get()
         odm = self.Monitor.get()
         usb = self.AnalyserUSB.get()
-        port_info = IM.AccessPortRead(usb)
-        
-        print("Analyser port {}".format(port_info.port))
-        print("Analyser rate {}".format(port_info.baudrate))
         
         try:
-            PM.SetVNAAddress(usb)
-            # PM.ZND.TestConnection()
+            IM.AccessPortRead(usb)
+            self.connectedToAnalyser = True
+            # PM.ConfigureVNA()
         except:
-            print('Connection Error')
+            tm.showerror(
+                'Connection Error', 'Unable to connect to Analyser Interface\nPlease check the nanoZND Port is correct.')
+            self.connectedToAnalyser = False
        
         try:
             PM.ConnectToProbeInterface(cp)
@@ -366,7 +375,7 @@ class ConnectionWindow(tk.Frame):
 
       
 
-        if self.connectedToCom == True:
+        if self.connectedToCom and self.connectedToAnalyser == True :
             controller.show_frame(TestProgramWindow)
     
 

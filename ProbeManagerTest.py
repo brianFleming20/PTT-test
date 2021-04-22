@@ -5,10 +5,10 @@ Created on 28 Apr 2017
 '''
 import PI
 import InstrumentManagerTest as IM
+from InstrumentManagerTest import InstrumentationManager
 import BatchManagerTest
 
 BM = BatchManagerTest.BatchManager()
-
 
 class ProbeManager(object):
     '''
@@ -21,7 +21,7 @@ class ProbeManager(object):
         '''
         self.PI = PI.PI()
         self.PD = PI.ProbeData()
-        
+        self.ZND = IM.ZND()
         self.testResults = []
         self.debugResults = [[1,1,1,],[2,2,2],[3,3,3]]
         
@@ -74,7 +74,14 @@ class ProbeManager(object):
         else:
             return False
 
-
+    def SetVNAAddress(self, usb):
+           IM.AccessPortRead(usb)
+         
+           
+           
+       
+    def ConfigureVNA(self):
+            self.ZND.capture()
 
 class Probe(object):
     
