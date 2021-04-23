@@ -28,54 +28,7 @@ class InstrumentationManager(object):
         
         self.monitor =""
         
-    def GetAnalyserPortNumber(self):
-        port_number = self.analyser_port_number
-        return port_number
-    
-    def GetMonitorReadings(self):
-        self.monitor = ChooseMonitor.get_monitor_type(self)
-        print("Getting is {}".format(self.monitor))
-        
-        
-    def set_ODM_port_number(self, monitor_com):
-        monitor_port = monitor_com
-        
-    def set_port_number(self, port):
-        self.analyser_port_number = port
-       
-    
-    def AccessPortRead(self, port_number):
-        line = ''
-        serial_port_read = serial.Serial(port = port_number, 
-                                   baudrate=1152000,
-                                   bytesize=8,
-                                   timeout=0.05,
-                                   parity = serial.PARITY_NONE,
-                                   stopbits=serial.STOPBITS_ONE)
-        serial_port_read.write("data\r".encode('ascii'))
-        while True:
-            c = serial_port_read.read().decode('utf-8')
-            if c == chr(13):
-                c=''
-                next # ignore CR
-            line += c
-            if c == chr(10):
-                c=''
-                if line == 'data\n':
-                    line='' # ignore data tag
-                    next
-                self.analyser_data.append(line[:-1])
-                line = ''
-                c = ''
-                next
-            if line.endswith('ch>'):
-                # stop on prompt
-                break
-    
-        print("{}".format(self.analyser_data))
-        self.analyser_port_number = serial_port_read.port
-        serial_port_read.close()
-        return serial_port_read
+  
     
     def read_analyser_data(self):
         port = self.GetAnalyserPortNumber()
@@ -145,9 +98,18 @@ class InstrumentationManager(object):
         else:
             return False
         
+        
+    def GetAnalyserPortNumber(self):
+        port = self.analyser_port_number
+        print("A port {}".format(self.analyser_port_number))
+        return port
+    
+    def SetAnalyserPortNumber(self, port):
+        self.analyser_port_number = port
+           
      
-    # def ContinuePatient(self):
-    #     # return current patient
+    def set_ODM_port_number(self, monitor_com):
+        self.monitor_port = monitor_com
         
     
     
@@ -353,25 +315,7 @@ class MoveProbe():
         return probe_in_place
 
 
-class ChooseMonitor(object):
-   
-    def __init__(self):
-        self.monitor = "Serial"
-        
-    
-    def get_monitor_type(self):
-        print(self.monitor)
-        return self.monitor
-   
-   
-    def set_monitor_type(self, monitor):
-        
-        if monitor == "true":
-            monitor_type = "serial"
-        else:
-            monitor_type = "extended"
-            
-        return monitor_type
+
     
 class ZND(object):
     '''
@@ -382,6 +326,8 @@ class ZND(object):
         self.deviceDetails = ''
         self.rm = visa.ResourceManager('@py')
         # self.HISLIPAddress = ''
+        self.analyser_data = []
+        self.analyser_port_number = ''
         self.znd = False
         self.RxRL = None
         self.TxRL = None
@@ -389,6 +335,50 @@ class ZND(object):
         self.RxMinMag = None
         self.TxMinFreq = None
         self.TxMinMag = None
+        self.IM = InstrumentationManager()
+        
+        
+    def GetAnalyserPortNumber(self):
+            port_number = self.analyser_port_number
+            return port_number
+    
+
+       
+    
+    def AccessPortRead(self, port_number):
+        line = ''
+        serial_port_read = serial.Serial(port = port_number, 
+                                   baudrate=1152000,
+                                   bytesize=8,
+                                   timeout=0.05,
+                                   parity = serial.PARITY_NONE,
+                                   stopbits=serial.STOPBITS_ONE)
+        analyser_port_number = serial_port_read
+        print("Nano data {}".format(analyser_port_number))
+        self.IM.SetAnalyserPortNumber(analyser_port_number)
+        serial_port_read.write("data\r".encode('ascii'))
+        while True:
+            c = serial_port_read.read().decode('utf-8')
+            if c == chr(13):
+                c=''
+                next # ignore CR
+            line += c
+            if c == chr(10):
+                c=''
+                if line == 'data\n':
+                    line='' # ignore data tag
+                    next
+                self.analyser_data.append(line[:-1])
+                line = ''
+                c = ''
+                next
+            if line.endswith('ch>'):
+                # stop on prompt
+                break
+    
+        print("{}".format(self.analyser_data))
+        serial_port_read.close() # Close port 
+        return serial_port_read
         
     def send_command(self, cmd):
         self.open()

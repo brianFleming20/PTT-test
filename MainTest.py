@@ -194,6 +194,7 @@ class TestProgramWindow(tk.Frame):
         self.sessionOnGoing = True
         serial_results = []
         self.deviceDetails = IM.GetAnalyserPortNumber()
+        print("analyser port {}".format(self.deviceDetails))
         # self.root.deiconify()
         # self.probeType.set(BM.currentBatch.probeType)
         # self.currentBatch.set(BM.currentBatch.batchNumber)
@@ -217,8 +218,7 @@ class TestProgramWindow(tk.Frame):
             Tk.update(self)
         except:
             tm.showerror(
-                'Connection Error', 'Unable to connect to Monitor Interface\nPlease check the ODM Port is turned on.')
-                # controller.show_frame(ConnectionWindow)
+                'Connection Error', 'Unable to collect the data from the ODM.')
 
         
         
@@ -277,8 +277,7 @@ class TestProgramWindow(tk.Frame):
                                 Tk.update(self)
                             except:
                                 tm.showerror(
-                                    'Connection Error', 'Unable to connect to Monitor Interface\nPlease check the ODM Port is turned on.')
-                                
+                                        'Connection Error', 'Unable to collect the data from the ODM.')
                         
                 while 1:
                     if PM.ProbePresent() == False:
@@ -301,6 +300,7 @@ class ConnectionWindow(tk.Frame):
         self.AnalyserUSB = StringVar()
         self.connectedToCom = False
         self.connectedToAnalyser = False
+        self.odm_connection = False
         AnalyserUSB = 'COM4'
         comPort = 'COM3'
         Monitor = 'COM5'
@@ -341,7 +341,7 @@ class ConnectionWindow(tk.Frame):
         self.bind('<Return>', self._connect_btn_clicked)
 
         self.cancelBtn = ttk.Button(
-            self, text="Cancel",  command=lambda: controller.show_frame(SessionSelectWindow))
+            self, text="Cancel",  command=lambda: controller.show_frame(ConnectionWindow))
         self.cancelBtn.place(relx=0.6, rely=0.8, anchor=CENTER)
 
         self.entry_1.focus_set()
@@ -356,26 +356,34 @@ class ConnectionWindow(tk.Frame):
         usb = self.AnalyserUSB.get()
         
         try:
-            IM.AccessPortRead(usb)
+            PM.ConnectToAnalyzer(usb)
             self.connectedToAnalyser = True
-            # PM.ConfigureVNA()
         except:
+            self.connectedToAnalyser = False
             tm.showerror(
                 'Connection Error', 'Unable to connect to Analyser Interface\nPlease check the nanoZND Port is correct.')
-            self.connectedToAnalyser = False
+            
        
         try:
             PM.ConnectToProbeInterface(cp)
-            IM.set_ODM_port_number(odm)        
+                   
             self.connectedToCom = True
         except:
             self.connectedToCom = False
             tm.showerror(
-                'Connection Error', 'Unable to connect to Probe Interface\nPlease check the COM Port is correct.')
+                'Connection Error', 'Unable to connect to Probe Interface\nPlease check the Probe Port is correct.')
 
-      
+        try:
+            IM.set_ODM_port_number(odm)  
+            self.odm_connection = True
+            
+        except:
+            self.odm_connection = False
+            tm.showerror(
+                'Connection Error', 'Unable to connect to ODM Interface\nPlease check the ODM Port is correct.')
 
-        if self.connectedToCom and self.connectedToAnalyser == True :
+
+        if self.connectedToCom and self.connectedToAnalyser and self.odm_connection == True :
             controller.show_frame(TestProgramWindow)
     
 

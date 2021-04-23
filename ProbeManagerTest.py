@@ -31,6 +31,9 @@ class ProbeManager(object):
         Pass in a com port ID (COMX) and connect to that comport.
         '''
         self.PI.Connect(comPort)
+        
+    def ConnectToAnalyzer(self, port):
+        self.ZND.AccessPortRead(port) 
     
     def ProgramProbe(self, probeType):
         '''
@@ -74,14 +77,11 @@ class ProbeManager(object):
         else:
             return False
 
-    def SetVNAAddress(self, usb):
-           IM.AccessPortRead(usb)
+ 
+         
          
            
-           
-       
-    def ConfigureVNA(self):
-            self.ZND.capture()
+
 
 class Probe(object):
     
